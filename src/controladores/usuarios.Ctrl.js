@@ -113,6 +113,10 @@ export const deleteUsuarios = async (req, res) => {
 
 export const login = async (req, res) => {
     const { usr_usuario, usr_clave } = req.body;
+    
+    if (!usr_usuario || !usr_clave) {
+        return res.status(400).json({ message: 'Por favor ingrese usuario y contraseña' });
+    }
 
     try {
         const [user] = await conmysql.query('SELECT * FROM usuarios WHERE usr_usuario = ?', [usr_usuario]);
