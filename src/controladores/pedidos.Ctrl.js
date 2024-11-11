@@ -35,23 +35,37 @@ export const getPedidosxid = async (req, res) => {
     }
 };
 
-export const postPedidos=
-async(req, res)=>{
+export const postPedidos = async (req, res) => {
     try {
-        //console.log(req.body) ver todos los datos del cliente
-        const{cli_id, ped_fecha, usr_id, ped_estado}=req.body
-        //console.log(cli_nombre) ver un dato en especifico del cliente
-        const [rows]=await conmysql.query('insert into pedidos (cli_id, ped_fecha, usr_id, ped_estado) values(?,?,?,?)',
-             [cli_id, ped_fecha, usr_id, ped_estado])
-        res.send({
-            id:rows.insertId
-        })
+        // Extraer los datos del cuerpo de la solicitud
+        const { cli_id, ped_fecha, usr_id, ped_estado } = req.body;
+
+        // Validar los datos recibidos
+        if (!cli_id || !ped_fecha || !usr_id || !ped_estado) {
+            return res.status(400).json({
+                message: "Faltan datos necesarios. Asegúrese de enviar cli_id, ped_fecha, usr_id y ped_estado."
+            });
+        }
+
+        // Realizar la inserción en la base de datos
+        const [rows] = await conmysql.query(
+            'INSERT INTO pedidos (cli_id, ped_fecha, usr_id, ped_estado) VALUES (?, ?, ?, ?)',
+            [cli_id, ped_fecha, usr_id, ped_estado]
+        );
+
+        // Devolver la respuesta con el ID del nuevo pedido
+        res.status(201).json({
+            message: "Pedido creado exitosamente",
+            id: rows.insertId
+        });
 
     } catch (error) {
-        return res.status(500).json({message:'error del lado del servidor'})
-        
+        // En caso de error, loguear el error y devolver una respuesta adecuada
+        console.error("Error en postPedidos:", error);
+        return res.status(500).json({ message: 'Error al crear el pedido, intente más tarde.' });
     }
 }
+
 
 export const putPedidos=
 async (req,res)=>{
