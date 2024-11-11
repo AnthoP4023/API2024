@@ -82,43 +82,44 @@ export const postProducto = async (req, res) => {
 export const putProductos = async (req, res) => {
     try {
         const { id } = req.params;
-        const { prod_codigo, prod_nombre, prod_stock, prod_precio, prod_activo, prod_imagen } = req.body;
-
-        let newProd_imagen = prod_imagen; // Si ya se pasó una URL de imagen, la usaremos
+        const { prod_codigo, prod_nombre, prod_stock, prod_precio, prod_activo } = req.body;
+        let newProd_imagen = req.body.prod_imagen; // Mantener la imagen actual si no se proporciona una nueva
 
         // Verificar si se subió una nueva imagen
         if (req.file) {
-            // Subir la nueva imagen a Cloudinary
             const uploadResult = await cloudinary.uploader.upload(req.file.path, {
                 folder: 'uploads',
-                public_id: `${Date.now()}-${req.file.originalname}` // Usar un nombre único
+                public_id: `${Date.now()}-${req.file.originalname}`
             });
-
-            // Obtener la URL segura de la imagen subida
             newProd_imagen = uploadResult.secure_url;
         }
 
         // Actualizar el producto en la base de datos
         const [result] = await conmysql.query(
-            'UPDATE productos SET prod_codigo = ?, prod_nombre = ?, prod_stock = ?, prod_precio = ?, prod_activo = ?, prod_imagen = ? WHERE prod_id = ?',
+            `UPDATE productos 
+             SET prod_codigo = COALESCE(?, prod_codigo), 
+                 prod_nombre = COALESCE(?, prod_nombre), 
+                 prod_stock = COALESCE(?, prod_stock), 
+                 prod_precio = COALESCE(?, prod_precio), 
+                 prod_activo = COALESCE(?, prod_activo), 
+                 prod_imagen = COALESCE(?, prod_imagen) 
+             WHERE prod_id = ?`,
             [prod_codigo, prod_nombre, prod_stock, prod_precio, prod_activo, newProd_imagen, id]
         );
 
         if (result.affectedRows <= 0) {
-            return res.status(404).json({
-                message: 'Producto no encontrado'
-            });
+            return res.status(404).json({ message: 'Producto no encontrado' });
         }
 
         // Obtener el producto actualizado
         const [rows] = await conmysql.query('SELECT * FROM productos WHERE prod_id = ?', [id]);
         res.json(rows[0]);
-
     } catch (error) {
-        console.error(error);
+        console.error('Error al actualizar producto:', error);
         return res.status(500).json({ message: 'Error del lado del servidor' });
     }
 };
+
 
 
 export const patchProductos=
