@@ -20,7 +20,7 @@ router.get('/productos', getProductos) //select
 router.get('/productos/:id', getProductosxid) //select x id
 router.post('/productos',upload.single('image'), postProducto) //insert
 router.put('/productos/:id', upload.single('image'), putProductos) //update
-router.patch('/productos/:id', patchProductos) //update
+router.patch('/productos/:id/reducir-stock', patchProductos);
 router.delete('/productos/:id', deleteProductos) //delete
 
 
