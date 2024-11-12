@@ -122,28 +122,39 @@ export const putProductos = async (req, res) => {
 
 
 
-export const patchProductos=
-async (req,res)=>{
+export const patchProductos = async (req, res) => {
     try {
-        const {id}=req.params
-        //console.log(req.body)
-        const {prod_codigo, prod_nombre, prod_stock, prod_precio, prod_activo, prod_imagen}=req.body
-        console.log(prod_nombre)
-        const [result]=await conmysql.query('update productos set prod_codigo = IFNULL(?, prod_codigo), prod_nombre = IFNULL(?, prod_nombre), prod_stock = IFNULL(?, prod_stock), prod_precio = IFNULL(?, prod_precio), prod_activo = IFNULL(?, prod_activo), prod_imagen = IFNULL(?, prod_imagen) WHERE prod_id = ?',
-            [prod_codigo, prod_nombre, prod_stock, prod_precio, prod_activo, prod_imagen, id])
+        const { id } = req.params;
+        const { cantidad } = req.body; // Se espera la cantidad a reducir
 
-        if(result.affectedRows<=0)return res.status(404).json({
-            message:'Productos no encontrado'
-        })
-        const[rows]=await conmysql.query('select * from productos where prod_id=?',[id])
-        res.json(rows[0])
-        /* res.send({
-            id:rows.insertId
-        }) */
+        // Asegúrate de que la cantidad no sea negativa
+        if (cantidad <= 0) {
+            return res.status(400).json({ message: "La cantidad a reducir debe ser mayor que cero" });
+        }
+
+        // Obtener el producto actual para ver el stock disponible
+        const [producto] = await conmysql.query('SELECT prod_stock FROM productos WHERE prod_id = ?', [id]);
+
+        if (producto.length === 0) {
+            return res.status(404).json({ message: 'Producto no encontrado' });
+        }
+
+        // Verifica si hay suficiente stock
+        const stockActual = producto[0].prod_stock;
+        if (stockActual < cantidad) {
+            return res.status(400).json({ message: 'No hay suficiente stock' });
+        }
+
+        // Actualiza el stock del producto
+        await conmysql.query('UPDATE productos SET prod_stock = prod_stock - ? WHERE prod_id = ?', [cantidad, id]);
+
+        res.status(200).json({ message: 'Stock actualizado correctamente' });
     } catch (error) {
-        return res.status(500).json({message:'error del lado del servidor'})
+        console.error("Error al actualizar el stock:", error);
+        return res.status(500).json({ message: 'Error del lado del servidor' });
     }
-}
+};
+
 
 export const deleteProductos=
 async(req, res)=>{
