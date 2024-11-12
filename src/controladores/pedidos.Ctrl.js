@@ -37,42 +37,36 @@ export const getPedidosxid = async (req, res) => {
 
 export const postPedidos = async (req, res) => {
     try {
-        const { cli_id, ped_fecha, usr_id, ped_estado, productos } = req.body;
+        // Extraer los datos del cuerpo de la solicitud
+        const { cli_id, ped_fecha, usr_id, ped_estado } = req.body;
 
         // Validar los datos recibidos
-        if (!cli_id || !ped_fecha || !usr_id || !ped_estado || !Array.isArray(productos)) {
+        if (!cli_id || !ped_fecha || !usr_id || !ped_estado) {
             return res.status(400).json({
-                message: "Faltan datos necesarios o productos no es un array."
+                message: "Faltan datos necesarios. Asegúrese de enviar cli_id, ped_fecha, usr_id y ped_estado."
             });
         }
 
-        // Insertar en la tabla 'pedidos'
-        const [pedidoResult] = await conmysql.query(
+        // Realizar la inserción en la base de datos
+        const [rows] = await conmysql.query(
             'INSERT INTO pedidos (cli_id, ped_fecha, usr_id, ped_estado) VALUES (?, ?, ?, ?)',
             [cli_id, ped_fecha, usr_id, ped_estado]
         );
-        
-        const pedidoId = pedidoResult.insertId;
 
-        // Insertar cada producto en 'pedidos_detalle'
-        for (const producto of productos) {
-            const { prod_id, det_cantidad, det_precio } = producto;
-            await conmysql.query(
-                'INSERT INTO pedidos_detalle (prod_id, ped_id, det_cantidad, det_precio) VALUES (?, ?, ?, ?)',
-                [prod_id, pedidoId, det_cantidad, det_precio]
-            );
-        }
-
+        // Devolver la respuesta con el ID del nuevo pedido
         res.status(201).json({
-            message: "Pedido y detalles creados exitosamente",
-            id: pedidoId
+            message: "Pedido creado exitosamente",
+            id: rows.insertId
         });
 
     } catch (error) {
+        // En caso de error, loguear el error y devolver una respuesta adecuada
         console.error("Error en postPedidos:", error);
         return res.status(500).json({ message: 'Error al crear el pedido, intente más tarde.' });
     }
-};
+}
+
+
 
 
 export const putPedidos=
