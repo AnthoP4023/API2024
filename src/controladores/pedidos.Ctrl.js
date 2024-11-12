@@ -128,6 +128,10 @@ export const deletePedidos = async (req, res) => {
     const pedidoId = req.params.id;
     console.log(`Intentando eliminar el pedido con ID: ${pedidoId}`);
 
+    // Elimina primero los registros de `pedidos_detalle` relacionados con el pedido
+    await conmysql.query('DELETE FROM pedidos_detalle WHERE ped_id = ?', [pedidoId]);
+
+    // Luego intenta eliminar el pedido
     const [rows] = await conmysql.query('DELETE FROM pedidos WHERE ped_id = ?', [pedidoId]);
 
     if (rows.affectedRows <= 0) {
@@ -139,10 +143,9 @@ export const deletePedidos = async (req, res) => {
     }
 
     console.log(`Pedido con ID: ${pedidoId} eliminado exitosamente`);
-    res.status(202).json({ message: "Pedido eliminado exitosamente" });  // Responder con un mensaje JSON
- } catch (error) {
+    res.status(202).json({ message: "Pedido eliminado exitosamente" });
+  } catch (error) {
     console.error('Error en la eliminación del pedido:', error.message, error.stack);
     return res.status(500).json({ message: 'Error al lado del servidor', error: error.message });
   }
 };
-
