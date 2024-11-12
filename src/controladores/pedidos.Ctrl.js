@@ -131,9 +131,10 @@ export const deletePedidos = async (req, res) => {
     }
 
     console.log(`Pedido con ID: ${pedidoId} eliminado exitosamente`);
-    res.sendStatus(202);
+    res.status(202).json({ message: "Pedido eliminado exitosamente" });  // Responder con un mensaje JSON
   } catch (error) {
     console.error('Error en la eliminación del pedido:', error);
     return res.status(500).json({ message: 'Error al lado del servidor' });
   }
 };
+
