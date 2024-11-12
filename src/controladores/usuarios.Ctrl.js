@@ -130,11 +130,13 @@ export const login = async (req, res) => {
             return res.status(401).json({ message: 'Contraseña inválida' });
         }
 
+        // Crear el token
         const token = jwt.sign({ id: user[0].usr_id }, process.env.JWT_SECRET, {
             expiresIn: '1h'
         });
 
-        res.status(200).json({ auth: true, token });
+        // Enviar el token y el id del usuario en la respuesta
+        res.status(200).json({ auth: true, token, usr_id: user[0].usr_id });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Error del lado del servidor' });
